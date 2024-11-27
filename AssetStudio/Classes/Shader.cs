@@ -336,7 +336,6 @@ namespace AssetStudio
         public int m_NameIndex;
         public int m_Index;
         public int m_ArraySize;
-        public int m_IndexInCB;
         public sbyte m_Type;
         public sbyte m_Dim;
 
@@ -345,9 +344,6 @@ namespace AssetStudio
             m_NameIndex = reader.ReadInt32();
             m_Index = reader.ReadInt32();
             m_ArraySize = reader.ReadInt32();
-            var r = reader as ObjectReader;
-            if (null != r && r.IsTuanJie)
-                m_IndexInCB = reader.ReadInt32();
             m_Type = reader.ReadSByte();
             m_Dim = reader.ReadSByte();
             reader.AlignStream();
@@ -359,7 +355,6 @@ namespace AssetStudio
         public int m_NameIndex;
         public int m_Index;
         public int m_ArraySize;
-        public int m_IndexInCB;
         public sbyte m_Type;
         public sbyte m_RowCount;
 
@@ -368,9 +363,6 @@ namespace AssetStudio
             m_NameIndex = reader.ReadInt32();
             m_Index = reader.ReadInt32();
             m_ArraySize = reader.ReadInt32();
-            var r = reader as ObjectReader;
-            if (null != r && r.IsTuanJie)
-                m_IndexInCB = reader.ReadInt32(); 
             m_Type = reader.ReadSByte();
             m_RowCount = reader.ReadSByte();
             reader.AlignStream();
@@ -427,7 +419,6 @@ namespace AssetStudio
         public List<StructParameter> m_StructParams;
         public int m_Size;
         public bool m_IsPartialCB;
-        public int m_totalParameterCount;
 
         public ConstantBuffer(ObjectReader reader)
         {
@@ -465,8 +456,6 @@ namespace AssetStudio
                (version[0] == 2021 && version[1] > 1) ||
                (version[0] == 2021 && version[1] == 1 && version[2] >= 4)) //2021.1.4f1 and up
             {
-                if (reader.IsTuanJie)
-                    m_totalParameterCount = reader.ReadInt32();
                 m_IsPartialCB = reader.ReadBoolean();
                 reader.AlignStream();
             }

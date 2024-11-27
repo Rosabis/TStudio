@@ -13,10 +13,6 @@ namespace AssetStudio
         public byte[] Index = new byte[0x10];
         public byte[] Sub = new byte[0x10];
 
-        public UnityCN()
-        {
-        }
-        
         public UnityCN(EndianBinaryReader reader)
         {
             reader.ReadUInt32();
@@ -32,7 +28,9 @@ namespace AssetStudio
             DecryptKey(signatureKey, signatureBytes);
 
             var str = Encoding.UTF8.GetString(signatureBytes);
-            Logger.Verbose($"Decrypted signature is {str}");
+            if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Decrypted signature is {str}");
+			}
             if (str != Signature)
             {
                 throw new Exception($"Invalid Signature, Expected {Signature} but found {str} instead");
@@ -53,7 +51,9 @@ namespace AssetStudio
 
         public static bool SetKey(Entry entry)
         {
-            Logger.Verbose($"Initializing decryptor with key {entry.Key}");
+            if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Initializing decryptor with key {entry.Key}");
+			}
             try
             {
                 using var aes = Aes.Create();
@@ -61,7 +61,9 @@ namespace AssetStudio
                 aes.Key = Convert.FromHexString(entry.Key);
 
                 Encryptor = aes.CreateEncryptor();
-                Logger.Verbose($"Decryptor initialized !!");
+                if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Decryptor initialized !!");
+			}
             }
             catch (Exception e)
             {
@@ -71,7 +73,7 @@ namespace AssetStudio
             return true;
         }
 
-        public virtual void DecryptBlock(Span<byte> bytes, int size, int index)
+        public void DecryptBlock(Span<byte> bytes, int size, int index)
         {
             var offset = 0;
             while (offset < size)
@@ -90,7 +92,7 @@ namespace AssetStudio
             }
         }
 
-        protected virtual int DecryptByte(Span<byte> bytes, ref int offset, ref int index)
+        private int DecryptByte(Span<byte> bytes, ref int offset, ref int index)
         {
             var b = Sub[((index >> 2) & 3) + 4] + Sub[index & 3] + Sub[((index >> 4) & 3) + 8] + Sub[((byte)index >> 6) + 12];
             bytes[offset] = (byte)((Index[bytes[offset] & 0xF] - b) & 0xF | 0x10 * (Index[bytes[offset] >> 4] - b));
@@ -100,7 +102,7 @@ namespace AssetStudio
             return b;
         }
 
-        protected int Decrypt(Span<byte> bytes, int index, int remaining)
+        private int Decrypt(Span<byte> bytes, int index, int remaining)
         {
             var offset = 0;
 

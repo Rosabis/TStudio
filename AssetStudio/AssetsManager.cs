@@ -6,52 +6,13 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using NLua;
 using static AssetStudio.ImportHelper;
 
 namespace AssetStudio
 {
     public class AssetsManager
     {
-        private Game _game;
-        public Game Game
-        {
-            get
-            {
-                return _game;
-            }
-            set
-            {
-                _game = value;
-                switch (value.Type)
-                {
-                    case GameType.ProjectSekai:
-                        SpecifyUnityVersion = "2022.3.32f1";
-                        break;
-                    case GameType.GirlsFrontline:
-                        SpecifyUnityVersion = "2019.4.40f1";
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-        private bool _enableLuaScript = false;
-
-        public bool EnableLuaScript
-        {
-            get => _enableLuaScript; 
-            set 
-            {
-                _enableLuaScript = value;
-                if (value)
-                {
-                    InitLuaEnv();
-                }
-            }
-        }
-        private Lua luaEnvironment = new Lua();
-        public string LuaScript = "";
+        public Game Game;
         public bool Silent = false;
         public bool SkipProcess = false;
         public bool ResolveDependencies = false;        
@@ -66,36 +27,6 @@ namespace AssetStudio
         internal HashSet<string> importFilesHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         internal HashSet<string> noexistFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         internal HashSet<string> assetsFileListHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        
-        public bool autoDetectMultipleBundle = false;
-        
-        public void SetSpecifyUnityVersion(string version)
-        {
-            SpecifyUnityVersion = version;
-        }
-        
-        public void SetGame(string game)
-        {
-            Game = GameManager.GetGame(game);
-        }
-
-        public void SetUnityCNKey(string Name, string Key)
-        {
-            UnityCN.SetKey(new UnityCN.Entry(Name, Key));
-        }
-        
-        private void InitLuaEnv()
-        {
-            var luaMethods = new LuaMethods();
-            var methods = typeof(LuaMethods).GetMethods();
-            foreach (var method in methods)
-            {
-                luaEnvironment.RegisterFunction(method.Name, luaMethods, method);
-            }
-            luaEnvironment.RegisterFunction("SetUnityVersion", this, GetType().GetMethod("SetSpecifyUnityVersion"));
-            luaEnvironment.RegisterFunction("SetGame", this, GetType().GetMethod("SetGame"));
-            luaEnvironment.RegisterFunction("SetUnityCNKey", this, GetType().GetMethod("SetUnityCNKey"));
-        }
 
         public void LoadFiles(params string[] files)
         {
@@ -143,7 +74,9 @@ namespace AssetStudio
         {
             foreach (var file in files)
             {
-                Logger.Verbose($"caching {file} path and name to filter out duplicates");
+                if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"caching {file} path and name to filter out duplicates");
+			}
                 importFiles.Add(file);
                 importFilesHash.Add(Path.GetFileName(file));
             }
@@ -176,29 +109,8 @@ namespace AssetStudio
 
         private void LoadFile(string fullName)
         {
-            FileReader reader = null;
-            if (!EnableLuaScript || LuaScript == "")
-            {
-                reader = new FileReader(fullName);
-            }
-            else
-            {
-                Logger.Info("Processing file with lua script...");
-                luaEnvironment["filepath"] = Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(fullName));
-                luaEnvironment["filename"] = Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(Path.GetFileName(fullName)));
-                luaEnvironment["filestream"] = new FileStream(fullName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                try
-                {
-                    var result = luaEnvironment.DoString(LuaScript);
-                    Stream fs = (Stream)result[0];
-                    reader = new FileReader(fullName, fs);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error($"Error while reading file {fullName} with lua", e);
-                }
-            }
-            reader = reader.PreProcessing(Game, autoDetectMultipleBundle);
+            var reader = new FileReader(fullName);
+            reader = reader.PreProcessing(Game);
             LoadFile(reader);
         }
 
@@ -250,7 +162,9 @@ namespace AssetStudio
 
                     foreach (var sharedFile in assetsFile.m_Externals)
                     {
-                        Logger.Verbose($"{assetsFile.fileName} needs external file {sharedFile.fileName}, attempting to look it up...");
+                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"{assetsFile.fileName} needs external file {sharedFile.fileName}, attempting to look it up...");
+			}
                         var sharedFileName = sharedFile.fileName;
 
                         if (!importFilesHash.Contains(sharedFileName))
@@ -263,7 +177,9 @@ namespace AssetStudio
                                     var findFiles = Directory.GetFiles(Path.GetDirectoryName(reader.FullPath), sharedFileName, SearchOption.AllDirectories);
                                     if (findFiles.Length > 0)
                                     {
-                                        Logger.Verbose($"Found {findFiles.Length} matching files, picking first file {findFiles[0]} !!");
+                                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Found {findFiles.Length} matching files, picking first file {findFiles[0]} !!");
+			}
                                         sharedFilePath = findFiles[0];
                                     }
                                 }
@@ -274,7 +190,9 @@ namespace AssetStudio
                                 }
                                 else
                                 {
-                                    Logger.Verbose("Nothing was found, caching into non existant files to avoid repeated searching !!");
+                                    if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose("Nothing was found, caching into non existant files to avoid repeated searching !!");
+			}
                                     noexistFiles.Add(sharedFilePath);
                                 }
                             }
@@ -296,7 +214,9 @@ namespace AssetStudio
 
         private void LoadAssetsFromMemory(FileReader reader, string originalPath, string unityVersion = null, long originalOffset = 0)
         {
-            Logger.Verbose($"Loading asset file {reader.FileName} with version {unityVersion} from {originalPath} at offset 0x{originalOffset:X8}");
+            if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Loading asset file {reader.FileName} with version {unityVersion} from {originalPath} at offset 0x{originalOffset:X8}");
+			}
             if (!assetsFileListHash.Contains(reader.FileName))
             {
                 try
@@ -341,7 +261,9 @@ namespace AssetStudio
                     }
                     else
                     {
-                        Logger.Verbose("Caching resource stream");
+                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose("Caching resource stream");
+			}
                         resourceFileReaders.TryAdd(file.fileName, subReader); //TODO
                     }
                 }
@@ -387,7 +309,9 @@ namespace AssetStudio
                             LoadWebFile(subReader);
                             break;
                         case FileType.ResourceFile:
-                            Logger.Verbose("Caching resource stream");
+                            if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose("Caching resource stream");
+			}
                             resourceFileReaders.TryAdd(file.fileName, subReader); //TODO
                             break;
                     }
@@ -411,7 +335,9 @@ namespace AssetStudio
                 using (ZipArchive archive = new ZipArchive(reader.BaseStream, ZipArchiveMode.Read))
                 {
                     List<string> splitFiles = new List<string>();
-                    Logger.Verbose("Register all files before parsing the assets so that the external references can be found and find split files");
+                    if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose("Register all files before parsing the assets so that the external references can be found and find split files");
+			}
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         if (entry.Name.Contains(".split"))
@@ -430,7 +356,9 @@ namespace AssetStudio
                         }
                     }
 
-                    Logger.Verbose("Merge split files and load the result");
+                    if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose("Merge split files and load the result");
+			}
                     foreach (string basePath in splitFiles)
                     {
                         try
@@ -459,14 +387,20 @@ namespace AssetStudio
                         }
                     }
 
-                    Logger.Verbose("Load all entries");
-                    Logger.Verbose($"Found {archive.Entries.Count} entries"); 
+                    if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose("Load all entries");
+			}
+                    if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Found {archive.Entries.Count} entries"); 
+			}
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         try
                         {
                             string dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), reader.FileName, entry.FullName);
-                            Logger.Verbose("Create a new stream to store the deflated stream in and keep the data for later extraction");
+                            if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose("Create a new stream to store the deflated stream in and keep the data for later extraction");
+			}
                             Stream streamReader = new MemoryStream();
                             using (Stream entryStream = entry.Open())
                             {
@@ -480,7 +414,9 @@ namespace AssetStudio
                             if (entryReader.FileType == FileType.ResourceFile)
                             {
                                 entryReader.Position = 0;
-                                Logger.Verbose("Caching resource file");
+                                if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose("Caching resource file");
+			}
                                 resourceFileReaders.TryAdd(entry.Name, entryReader);
                             }
                         }
@@ -583,7 +519,9 @@ namespace AssetStudio
             try
             {
                 var mhyFile = new MhyFile(reader, (Mhy)Game);
-                Logger.Verbose($"mhy total size: {mhyFile.m_Header.size:X8}");
+                if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"mhy total size: {mhyFile.m_Header.size:X8}");
+			}
                 foreach (var file in mhyFile.fileList)
                 {
                     var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
@@ -594,7 +532,9 @@ namespace AssetStudio
                     }
                     else
                     {
-                        Logger.Verbose("Caching resource stream");
+                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose("Caching resource stream");
+			}
                         resourceFileReaders.TryAdd(file.fileName, cabReader); //TODO
                     }
                 }
@@ -637,7 +577,9 @@ namespace AssetStudio
                     }
                     else
                     {
-                        Logger.Verbose("Caching resource stream");
+                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose("Caching resource stream");
+			}
                         resourceFileReaders.TryAdd(file.fileName, cabReader); //TODO
                     }
                 }
@@ -671,7 +613,10 @@ namespace AssetStudio
 
         public void Clear()
         {
-            Logger.Verbose("Cleaning up...");
+            if(Logger.Flags.HasFlag(LoggerEvent.Verbose))
+            {
+			Logger.Verbose("Cleaning up...");
+			}
 
             foreach (var assetsFile in assetsFileList)
             {
@@ -691,8 +636,8 @@ namespace AssetStudio
             tokenSource.Dispose();
             tokenSource = new CancellationTokenSource();
 
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
+            //GC.WaitForPendingFinalizers();
+            //GC.Collect();
         }
 
         private void ReadAssets()
@@ -782,7 +727,9 @@ namespace AssetStudio
                     }
                     if (obj is GameObject m_GameObject)
                     {
-                        Logger.Verbose($"GameObject with {m_GameObject.m_PathID} in file {m_GameObject.assetsFile.fileName} has {m_GameObject.m_Components.Count} components, Attempting to fetch them...");
+                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"GameObject with {m_GameObject.m_PathID} in file {m_GameObject.assetsFile.fileName} has {m_GameObject.m_Components.Count} components, Attempting to fetch them...");
+			}
                         foreach (var pptr in m_GameObject.m_Components)
                         {
                             if (pptr.TryGet(out var m_Component))
@@ -790,27 +737,39 @@ namespace AssetStudio
                                 switch (m_Component)
                                 {
                                     case Transform m_Transform:
-                                        Logger.Verbose($"Fetched Transform component with {m_Transform.m_PathID} in file {m_Transform.assetsFile.fileName}, assigning to GameObject components...");
+                                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Fetched Transform component with {m_Transform.m_PathID} in file {m_Transform.assetsFile.fileName}, assigning to GameObject components...");
+			}
                                         m_GameObject.m_Transform = m_Transform;
                                             break;
                                     case MeshRenderer m_MeshRenderer:
-                                        Logger.Verbose($"Fetched MeshRenderer component with {m_MeshRenderer.m_PathID} in file {m_MeshRenderer.assetsFile.fileName}, assigning to GameObject components...");
+                                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Fetched MeshRenderer component with {m_MeshRenderer.m_PathID} in file {m_MeshRenderer.assetsFile.fileName}, assigning to GameObject components...");
+			}
                                         m_GameObject.m_MeshRenderer = m_MeshRenderer;
                                             break;
                                     case MeshFilter m_MeshFilter:
-                                        Logger.Verbose($"Fetched MeshFilter component with {m_MeshFilter.m_PathID} in file {m_MeshFilter.assetsFile.fileName}, assigning to GameObject components...");
+                                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Fetched MeshFilter component with {m_MeshFilter.m_PathID} in file {m_MeshFilter.assetsFile.fileName}, assigning to GameObject components...");
+			}
                                         m_GameObject.m_MeshFilter = m_MeshFilter;
                                             break;
                                     case SkinnedMeshRenderer m_SkinnedMeshRenderer:
-                                        Logger.Verbose($"Fetched SkinnedMeshRenderer component with {m_SkinnedMeshRenderer.m_PathID} in file {m_SkinnedMeshRenderer.assetsFile.fileName}, assigning to GameObject components...");
+                                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Fetched SkinnedMeshRenderer component with {m_SkinnedMeshRenderer.m_PathID} in file {m_SkinnedMeshRenderer.assetsFile.fileName}, assigning to GameObject components...");
+			}
                                         m_GameObject.m_SkinnedMeshRenderer = m_SkinnedMeshRenderer;
                                             break;
                                     case Animator m_Animator:
-                                        Logger.Verbose($"Fetched Animator component with {m_Animator.m_PathID} in file {m_Animator.assetsFile.fileName}, assigning to GameObject components...");
+                                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Fetched Animator component with {m_Animator.m_PathID} in file {m_Animator.assetsFile.fileName}, assigning to GameObject components...");
+			}
                                         m_GameObject.m_Animator = m_Animator;
                                             break;
                                     case Animation m_Animation:
-                                        Logger.Verbose($"Fetched Animation component with {m_Animation.m_PathID} in file {m_Animation.assetsFile.fileName}, assigning to GameObject components...");
+                                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Fetched Animation component with {m_Animation.m_PathID} in file {m_Animation.assetsFile.fileName}, assigning to GameObject components...");
+			}
                                         m_GameObject.m_Animation = m_Animation;
                                             break;
                                 }
@@ -821,14 +780,18 @@ namespace AssetStudio
                     {
                         if (m_SpriteAtlas.m_RenderDataMap.Count > 0)
                         {
-                            Logger.Verbose($"SpriteAtlas with {m_SpriteAtlas.m_PathID} in file {m_SpriteAtlas.assetsFile.fileName} has {m_SpriteAtlas.m_PackedSprites.Count} packed sprites, Attempting to fetch them...");
+                            if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"SpriteAtlas with {m_SpriteAtlas.m_PathID} in file {m_SpriteAtlas.assetsFile.fileName} has {m_SpriteAtlas.m_PackedSprites.Count} packed sprites, Attempting to fetch them...");
+			}
                             foreach (var m_PackedSprite in m_SpriteAtlas.m_PackedSprites)
                             {
                                 if (m_PackedSprite.TryGet(out var m_Sprite))
                                 {
                                     if (m_Sprite.m_SpriteAtlas.IsNull)
                                     {
-                                        Logger.Verbose($"Fetched Sprite with {m_Sprite.m_PathID} in file {m_Sprite.assetsFile.fileName}, assigning to parent SpriteAtlas...");
+                                        if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Fetched Sprite with {m_Sprite.m_PathID} in file {m_Sprite.assetsFile.fileName}, assigning to parent SpriteAtlas...");
+			}
                                         m_Sprite.m_SpriteAtlas.Set(m_SpriteAtlas);
                                     }
                                     else
@@ -836,7 +799,9 @@ namespace AssetStudio
                                         m_Sprite.m_SpriteAtlas.TryGet(out var m_SpriteAtlaOld);
                                         if (m_SpriteAtlaOld.m_IsVariant)
                                         {
-                                            Logger.Verbose($"Fetched Sprite with {m_Sprite.m_PathID} in file {m_Sprite.assetsFile.fileName} has a variant of the origianl SpriteAtlas, disposing of the variant and assinging to the parent SpriteAtlas...");
+                                            if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Fetched Sprite with {m_Sprite.m_PathID} in file {m_Sprite.assetsFile.fileName} has a variant of the origianl SpriteAtlas, disposing of the variant and assinging to the parent SpriteAtlas...");
+			}
                                             m_Sprite.m_SpriteAtlas.Set(m_SpriteAtlas);
                                         }
                                     }

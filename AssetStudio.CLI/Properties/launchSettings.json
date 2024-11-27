@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AssetStudio.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    }
+  }
+}

@@ -42,13 +42,10 @@ namespace AssetStudio
         private const string PrevLogFileName = "log_prev.txt";
         private readonly object LockWriter = new object();
         private StreamWriter Writer;
-        public string logPath;
-        public string prevLogPath;
-
         public FileLogger()
         {
-            logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogFileName);
-            prevLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, PrevLogFileName);
+            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogFileName);
+            var prevLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, PrevLogFileName);
 
             if (File.Exists(logPath))
             {

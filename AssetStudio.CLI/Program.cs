@@ -40,7 +40,6 @@ namespace AssetStudio.CLI
                 }
 
                 Studio.Game = game;
-                Studio.AutoDetectMultipleBundle = o.AutoDetectMultipleBundle;
                 Logger.Default = new ConsoleLogger();
                 Logger.Flags = o.LoggerFlags.Aggregate((e, x) => e |= x);
                 Logger.FileLogging = Settings.Default.enableFileLogging;
@@ -118,11 +117,7 @@ namespace AssetStudio.CLI
                 {
                     TypeFlags.SetType(ClassIDType.AssetBundle, true, false);
                 }
-                if (o.LuaScriptPath != null)
-                {
-                    assetsManager.EnableLuaScript = true;
-                    assetsManager.LuaScript = File.ReadAllText(o.LuaScriptPath);
-                }
+
                 assetsManager.Silent = o.Silent;
                 assetsManager.Game = game;
                 assetsManager.SpecifyUnityVersion = o.UnityVersion;

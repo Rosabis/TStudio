@@ -37,7 +37,6 @@ namespace AssetStudio.GUI
         private FMOD.MODE loopMode = FMOD.MODE.LOOP_OFF;
         private uint FMODlenms;
         private float FMODVolume = 0.8f;
-        private Point MouseDownLocation;
 
         #region TexControl
         private static char[] textureChannelNames = new[] { 'B', 'G', 'R', 'A' };
@@ -111,8 +110,6 @@ namespace AssetStudio.GUI
             MiHoYoBinData.Encrypted = Properties.Settings.Default.encrypted;
             MiHoYoBinData.Key = Properties.Settings.Default.key;
             AssetsHelper.Minimal = Properties.Settings.Default.minimalAssetMap;
-            enableLuaScripts.Checked = Properties.Settings.Default.enableLuaScripts;
-            AutoDetectMultipleBundle.Checked = Properties.Settings.Default.autoDetectMultipleBundle;
         }
 
         private void InitializeLogger()
@@ -472,14 +469,6 @@ namespace AssetStudio.GUI
             Properties.Settings.Default.displayAll = displayAll.Checked;
             Properties.Settings.Default.Save();
         }
-        
-        private void autoDetectMultipleBundle_CheckedChanged(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.autoDetectMultipleBundle = AutoDetectMultipleBundle.Checked;
-            assetsManager.autoDetectMultipleBundle = AutoDetectMultipleBundle.Checked;
-            Studio.AutoDetectMultipleBundle = AutoDetectMultipleBundle.Checked;
-            Properties.Settings.Default.Save();
-        }
 
         private void enablePreview_Check(object sender, EventArgs e)
         {
@@ -492,11 +481,12 @@ namespace AssetStudio.GUI
                         {
                             if (enablePreview.Checked && imageTexture != null)
                             {
-                                imgPreviewBox.Image = imageTexture.Bitmap;
+                                previewPanel.BackgroundImage = imageTexture.Bitmap;
                             }
                             else
                             {
-                                imgPreviewBox.Image = null;
+                                previewPanel.BackgroundImage = Properties.Resources.preview;
+                                previewPanel.BackgroundImageLayout = ImageLayout.Center;
                             }
                         }
                         break;
@@ -776,12 +766,12 @@ namespace AssetStudio.GUI
 
         private void selectAsset(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            imgPreviewBox.Image = null;
+            previewPanel.BackgroundImage = Properties.Resources.preview;
+            previewPanel.BackgroundImageLayout = ImageLayout.Center;
             classTextBox.Visible = false;
             assetInfoLabel.Visible = false;
             assetInfoLabel.Text = null;
             textPreviewBox.Visible = false;
-            imgPreviewBox.Visible = false;
             fontPreviewBox.Visible = false;
             FMODpanel.Visible = false;
             glControl.Visible = false;
@@ -815,7 +805,6 @@ namespace AssetStudio.GUI
             assetInfoLabel.Visible = false;
             assetInfoLabel.Text = null;
             textPreviewBox.Visible = false;
-            imgPreviewBox.Visible = false;
             fontPreviewBox.Visible = false;
             FMODpanel.Visible = false;
             glControl.Visible = false;
@@ -1451,54 +1440,13 @@ namespace AssetStudio.GUI
 
         private void PreviewTexture(DirectBitmap bitmap)
         {
-            imgPreviewBox.Visible = true;
-            imgPreviewBox.Size = new Size(768, 605);
-            imgPreviewBox.Location = new Point(0, 0);
             imageTexture?.Dispose();
             imageTexture = bitmap;
-            imgPreviewBox.Image = imageTexture.Bitmap;
-            imgPreviewBox.SizeMode = PictureBoxSizeMode.Zoom;
-        }
-        
-        private void imgPreviewBox_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == System.Windows.Forms.MouseButtons.Left)
-            {
-                MouseDownLocation = e.Location;
-            }
-        }
-
-        private void imgPreviewBox_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                imgPreviewBox.Left = e.X + imgPreviewBox.Left - MouseDownLocation.X;
-                imgPreviewBox.Top = e.Y + imgPreviewBox.Top - MouseDownLocation.Y;
-            }
-        }
-
-        private void imgPreviewBox_MouseWheel(object sender, MouseEventArgs e)
-        {
-            if (e.Delta > 0)
-            {
-                // Zoom in
-                imgPreviewBox.Width = (int)(imgPreviewBox.Width * 1.25);
-                imgPreviewBox.Height = (int)(imgPreviewBox.Height * 1.25);
-            }
+            previewPanel.BackgroundImage = imageTexture.Bitmap;
+            if (imageTexture.Width > previewPanel.Width || imageTexture.Height > previewPanel.Height)
+                previewPanel.BackgroundImageLayout = ImageLayout.Zoom;
             else
-            {
-                // Zoom out
-                imgPreviewBox.Width = (int)(imgPreviewBox.Width / 1.25);
-                imgPreviewBox.Height = (int)(imgPreviewBox.Height / 1.25);
-            }
-        }
-        
-        private void imgPreviewBox_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                imgPreviewBox.Location = new Point(e.X + imgPreviewBox.Left - MouseDownLocation.X, e.Y + imgPreviewBox.Top - MouseDownLocation.Y);
-            }
+                previewPanel.BackgroundImageLayout = ImageLayout.Center;
         }
 
         private void PreviewText(string text)
@@ -1546,13 +1494,13 @@ namespace AssetStudio.GUI
             assetListView.Items.Clear();
             classesListView.Items.Clear();
             classesListView.Groups.Clear();
-            imgPreviewBox.Image = null;
+            previewPanel.BackgroundImage = Properties.Resources.preview;
             imageTexture?.Dispose();
             imageTexture = null;
+            previewPanel.BackgroundImageLayout = ImageLayout.Center;
             assetInfoLabel.Visible = false;
             assetInfoLabel.Text = null;
             textPreviewBox.Visible = false;
-            imgPreviewBox.Visible = false;
             fontPreviewBox.Visible = false;
             glControl.Visible = false;
             lastSelectedItem = null;
@@ -2402,30 +2350,6 @@ namespace AssetStudio.GUI
             Logger.FileLogging = enableFileLogging.Checked;
         }
 
-        private void openLogFile(object sender, EventArgs e)
-        {
-            if (Logger.FileLogging && Logger.File is FileLogger fileLogger)
-            {
-                if (File.Exists(fileLogger.logPath))
-                {
-                    var psi = new ProcessStartInfo
-                    {
-                        FileName = fileLogger.logPath,
-                        UseShellExecute = true
-                    };
-                    Process.Start(psi);
-                }
-                else
-                {
-                    MessageBox.Show("Log file not found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            else
-            {
-                MessageBox.Show("File logging is not enabled", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
         private void loggedEventsMenuItem_DropDownClosing(object sender, ToolStripDropDownClosingEventArgs e)
         {
             if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
@@ -3031,32 +2955,5 @@ namespace AssetStudio.GUI
             }
         }
         #endregion
-
-        private void enableLua_CheckedChanged(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.enableLuaScripts = enableLuaScripts.Checked;
-            Properties.Settings.Default.Save();
-            assetsManager.EnableLuaScript = enableLuaScripts.Checked;
-        }
-
-        private void loadLuaTemplate_Click(object sender, EventArgs e)
-        {
-            
-            var openFileDialog = new OpenFileDialog()
-            {
-                Multiselect = false, 
-                Filter = "Lua Script|*.lua",
-                InitialDirectory = Path.Combine(Application.StartupPath, "LuaScripts")
-            };
-            if (openFileDialog.ShowDialog(this) == DialogResult.OK)
-            {
-                var path = openFileDialog.FileName;
-                Logger.Info($"Loading Lua Script...");
-                if (File.Exists(path) && Path.GetExtension(path) == ".lua")
-                {
-                    assetsManager.LuaScript = File.ReadAllText(path);
-                }
-            }
-        }
     }
 }

@@ -18,76 +18,6 @@ namespace AssetStudio
             m_Max = reader.ReadVector3();
         }
     }
-    
-        public class Id_Vector3f
-    {
-        public float x, y, z;
-
-        public Id_Vector3f(BinaryReader reader)
-        {
-            x = reader.ReadSingle();
-            y = reader.ReadSingle();
-            z = reader.ReadSingle();
-        }
-    }
-
-    public class Id_Vector4f
-    {
-        public float x, y, z, w;
-
-        public Id_Vector4f(BinaryReader reader)
-        {
-            x = reader.ReadSingle();
-            y = reader.ReadSingle();
-            z = reader.ReadSingle();
-            w = reader.ReadSingle();
-        }
-    }
-
-
-    public class VGPackedHierarchyNode
-    {
-        public Id_Vector4f[] LODBounds = new Id_Vector4f[8];
-        public Id_Vector3f[] BoxBoundsCenter = new Id_Vector3f[8];
-        public uint[] MinLODError_MaxParentLODError = new uint[8];
-        public Id_Vector3f[] BoxBoundsExtent = new Id_Vector3f[8];
-        public uint[] ChildStartReference = new uint[8];
-        public uint[] ResourcePageIndex_NumPages_GroupPartSize = new uint[8];
-
-        public VGPackedHierarchyNode(BinaryReader reader)
-        {
-            for (int i = 0; i < 8; i++)
-            {
-                LODBounds[i] = new Id_Vector4f(reader);
-                BoxBoundsCenter[i] = new Id_Vector3f(reader);
-                MinLODError_MaxParentLODError[i] = reader.ReadUInt32();
-                BoxBoundsExtent[i] = new Id_Vector3f(reader);
-                ChildStartReference[i] = reader.ReadUInt32();
-                ResourcePageIndex_NumPages_GroupPartSize[i] = reader.ReadUInt32();
-            }
-        }
-    }
-
-
-    public class VGPageStreamingState
-    {
-        public uint BulkOffset { get; set; }
-        public uint BulkSize { get; set; }
-        public uint PageSize { get; set; }
-        public uint DependenciesStart { get; set; }
-        public uint DependenciesNum { get; set; }
-        public uint Flags { get; set; }
-
-        public VGPageStreamingState(BinaryReader reader)
-        {
-            BulkOffset = reader.ReadUInt32();
-            BulkSize = reader.ReadUInt32();
-            PageSize = reader.ReadUInt32();
-            DependenciesStart = reader.ReadUInt32();
-            DependenciesNum = reader.ReadUInt32();
-            Flags = reader.ReadUInt32();
-        }
-    }
 
     public class CompressedMesh
     {
@@ -414,6 +344,7 @@ namespace AssetStudio
         public List<MeshBlendShape> shapes;
         public List<MeshBlendShapeChannel> channels;
         public float[] fullWeights;
+        public static bool HasVarintVertices(SerializedType type) => type.Match("70AE601CDF0C273E745D9EC1333426A4");
 
         public BlendShapeData(ObjectReader reader)
         {
@@ -476,6 +407,11 @@ namespace AssetStudio
                             shape.firstVertex /= stride;
                         }
                     }
+                }
+                if (reader.Game.Type.IsShiningNikki() && version[0] >=2019)
+                {
+                   var varintVertices = reader.ReadUInt8Array();
+
                 }
             }
             else
@@ -573,7 +509,7 @@ namespace AssetStudio
         private bool m_CollisionMeshBaked = false;
 
         public static bool HasVertexColorSkinning(SerializedType type) => type.Match("413A501B79022BF2DF389A82002FC81F");
-
+      
         public List<uint> m_Indices = new List<uint>();
 
         public Mesh(ObjectReader reader) : base(reader)
@@ -661,47 +597,6 @@ namespace AssetStudio
                         m_CollisionMeshBaked = reader.ReadBoolean();
                         var m_CollisionMeshConvex = reader.ReadBoolean();
                     }
-
-                    if (reader.IsTuanJie)
-                    {
-                        var m_LightmapUseUV1 = reader.ReadInt32();
-                        var m_fileScale = reader.ReadSingle();
-
-                        var NumInputTriangles = reader.ReadUInt32();
-                        var NumInputVertices = reader.ReadUInt32();
-                        var NumInputMeshes = reader.ReadUInt16();
-                        var NumInputTexCoords = reader.ReadUInt16();
-                        var ResourceFlags = reader.ReadUInt32();
-
-                        var RootClusterPage = reader.ReadInt32();
-                        m_IndexBuffer = reader.ReadUInt32Array(RootClusterPage / 4);
-
-                        var ImposterAtlas = reader.ReadInt32();
-                        for (int i = 0; i < ImposterAtlas; i++)
-                        {
-                            reader.ReadUInt16();
-                        }
-                        var HierarchyNodes = reader.ReadInt32();
-                        for (int i = 0; i < HierarchyNodes; i++)
-                        {
-                            new VGPackedHierarchyNode(reader);
-                        }
-                        var HierarchyRootOffsets = reader.ReadInt32();
-                        for (int i = 0; i < HierarchyRootOffsets; i++)
-                        {
-                            reader.ReadUInt32();
-                        }
-                        var PageStreamingStates = reader.ReadInt32();
-                        for (int i = 0; i < PageStreamingStates; i++)
-                        {
-                            new VGPageStreamingState(reader);
-                        }
-                        var PageDependencies = reader.ReadInt32();
-                        for (int i = 0; i < PageDependencies; i++)
-                        {
-                            reader.ReadUInt32();
-                        }
-                    }
                 }
                 reader.AlignStream();
                 if (reader.Game.Type.IsGISubGroup() || (reader.Game.Type.IsBH3() && HasVertexColorSkinning(reader.serializedType)))
@@ -710,10 +605,6 @@ namespace AssetStudio
                     reader.AlignStream();
                 }
 
-                if (reader.IsTuanJie)
-                {
-                    reader.ReadInt32();
-                }
                 //Unity fixed it in 2017.3.1p1 and later versions
                 if ((version[0] > 2017 || (version[0] == 2017 && version[1] >= 4)) || //2017.4
                     ((version[0] == 2017 && version[1] == 3 && version[2] == 1) && buildType.IsPatch) || //fixed after 2017.3.1px

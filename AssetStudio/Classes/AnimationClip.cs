@@ -494,7 +494,7 @@ namespace AssetStudio
             if (version[0] == 2022 && version[1] >= 2) //2022.2 and up
             {
                 flags = reader.ReadInt32();
-            }
+        }
         }
 
         public YAMLNode ExportYAML(int[] version)
@@ -1459,7 +1459,7 @@ namespace AssetStudio
         public bool m_KeepOriginalPositionY;
         public bool m_KeepOriginalPositionXZ;
         public bool m_HeightFromFeet;
-        public static bool HasShortIndexArray(SerializedType type) => type.Match("E708B1872AE48FD688AC012DF4A7A178") || type.Match("055AA41C7639327940F8900103A10356");
+        public static bool HasShortIndexArray(SerializedType type) => type.Match("E708B1872AE48FD688AC012DF4A7A178") || type.Match("055AA41C7639327940F8900103A10356") || type.Match("82E1E738FBDE87C5A8DAE868F0578A4D");
         public ClipMuscleConstant() { }
 
         public ClipMuscleConstant(ObjectReader reader)
@@ -1656,7 +1656,6 @@ namespace AssetStudio
         public byte customType;
         public byte isPPtrCurve;
         public byte isIntCurve;
-        public byte isSerializeReferenceCurve;
 
         public GenericBinding() { }
 
@@ -1889,37 +1888,28 @@ namespace AssetStudio
                 var m_aclType = reader.ReadInt32();
             }
 
-            if (reader.IsTuanJie)
+            if (version[0] > 5 || (version[0] == 5 && version[1] >= 3))//5.3 and up
             {
+                int numEulerCurves = reader.ReadInt32();
                 m_EulerCurves = new List<Vector3Curve>();
-                m_PositionCurves = new List<Vector3Curve>();
-                m_ScaleCurves = new List<Vector3Curve>();
+                for (int i = 0; i < numEulerCurves; i++)
+                {
+                    m_EulerCurves.Add(new Vector3Curve(reader));
+                }
             }
-            else
+
+            int numPCurves = reader.ReadInt32();
+            m_PositionCurves = new List<Vector3Curve>();
+            for (int i = 0; i < numPCurves; i++)
             {
-                if (version[0] > 5 || (version[0] == 5 && version[1] >= 3))//5.3 and up
-                {
-                    int numEulerCurves = reader.ReadInt32();
-                    m_EulerCurves = new List<Vector3Curve>();
-                    for (int i = 0; i < numEulerCurves; i++)
-                    {
-                        m_EulerCurves.Add(new Vector3Curve(reader));
-                    }
-                }
-    
-                int numPCurves = reader.ReadInt32();
-                m_PositionCurves = new List<Vector3Curve>();
-                for (int i = 0; i < numPCurves; i++)
-                {
-                    m_PositionCurves.Add(new Vector3Curve(reader));
-                }
-    
-                int numSCurves = reader.ReadInt32();
-                m_ScaleCurves = new List<Vector3Curve>();
-                for (int i = 0; i < numSCurves; i++)
-                {
-                    m_ScaleCurves.Add(new Vector3Curve(reader));
-                }
+                m_PositionCurves.Add(new Vector3Curve(reader));
+            }
+
+            int numSCurves = reader.ReadInt32();
+            m_ScaleCurves = new List<Vector3Curve>();
+            for (int i = 0; i < numSCurves; i++)
+            {
+                m_ScaleCurves.Add(new Vector3Curve(reader));
             }
 
             int numFCurves = reader.ReadInt32();
@@ -1949,7 +1939,6 @@ namespace AssetStudio
             {
                 m_Bounds = new AABB(reader);
             }
-            
             if (version[0] >= 4)//4.0 and up
             {
                 if (reader.Game.Type.IsGI())
@@ -1971,21 +1960,8 @@ namespace AssetStudio
                 }
                 else
                 {
-                    if (reader.IsTuanJie)
-                    {
-                        m_MuscleClipSize = reader.ReadUInt32();
-                        if (m_MuscleClipSize > 0)
-                        {
-                            reader.ReadUInt32(); // not needed
-                            m_MuscleClip = new ClipMuscleConstant(reader);
-                            m_StreamData = new StreamingInfo(reader);
-                        }
-                    }
-                    else
-                    {
-                        m_MuscleClipSize = reader.ReadUInt32();
-                        m_MuscleClip = new ClipMuscleConstant(reader);
-                    }
+                    m_MuscleClipSize = reader.ReadUInt32();
+                    m_MuscleClip = new ClipMuscleConstant(reader);
                 }
             }
             if (reader.Game.Type.IsSRGroup())
@@ -1999,7 +1975,6 @@ namespace AssetStudio
                 }
                 var m_AclRange = new KeyValuePair<float, float>(reader.ReadSingle(), reader.ReadSingle());
             }
-            
             if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
             {
                 m_ClipBindingConstant = new AnimationClipBindingConstant(reader);

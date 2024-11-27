@@ -60,7 +60,6 @@ namespace AssetStudio.GUI
             toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
             toolStripMenuItem18 = new System.Windows.Forms.ToolStripMenuItem();
             specifyGame = new System.Windows.Forms.ToolStripComboBox();
-            AutoDetectMultipleBundle = new System.Windows.Forms.ToolStripMenuItem();
             toolStripMenuItem19 = new System.Windows.Forms.ToolStripMenuItem();
             specifyAIVersion = new System.Windows.Forms.ToolStripComboBox();
             showExpOpt = new System.Windows.Forms.ToolStripMenuItem();
@@ -162,7 +161,6 @@ namespace AssetStudio.GUI
             fontPreviewBox = new System.Windows.Forms.RichTextBox();
             glControl = new OpenTK.WinForms.GLControl();
             textPreviewBox = new System.Windows.Forms.TextBox();
-            imgPreviewBox = new System.Windows.Forms.PictureBox();
             classTextBox = new System.Windows.Forms.TextBox();
             tabPage5 = new System.Windows.Forms.TabPage();
             dumpTextBox = new System.Windows.Forms.TextBox();
@@ -176,10 +174,6 @@ namespace AssetStudio.GUI
             exportAnimatorwithselectedAnimationClipMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             goToSceneHierarchyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             showOriginalFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            luaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            enableLuaScripts = new System.Windows.Forms.ToolStripMenuItem();
-            luaTemplates = new System.Windows.Forms.ToolStripMenuItem();
-            openLogFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
@@ -203,7 +197,7 @@ namespace AssetStudio.GUI
             // 
             // menuStrip1
             // 
-            menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { fileToolStripMenuItem, optionsToolStripMenuItem, modelToolStripMenuItem, exportToolStripMenuItem, filterTypeToolStripMenuItem, debugMenuItem, miscToolStripMenuItem, luaToolStripMenuItem });
+            menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { fileToolStripMenuItem, optionsToolStripMenuItem, modelToolStripMenuItem, exportToolStripMenuItem, filterTypeToolStripMenuItem, debugMenuItem, miscToolStripMenuItem });
             menuStrip1.Location = new System.Drawing.Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new System.Drawing.Size(1264, 24);
@@ -271,7 +265,7 @@ namespace AssetStudio.GUI
             // 
             // optionsToolStripMenuItem
             // 
-            optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { displayAll, toolStripSeparator10, enablePreview, enableModelPreview, modelsOnly, toolStripSeparator11, displayInfo, enableResolveDependencies, allowDuplicates, skipContainer, toolStripSeparator12, toolStripMenuItem14, specifyUnityCNKey, toolStripSeparator13, toolStripMenuItem18, AutoDetectMultipleBundle, toolStripMenuItem19, showExpOpt });
+            optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { displayAll, toolStripSeparator10, enablePreview, enableModelPreview, modelsOnly, toolStripSeparator11, displayInfo, enableResolveDependencies, allowDuplicates, skipContainer, toolStripSeparator12, toolStripMenuItem14, specifyUnityCNKey, toolStripSeparator13, toolStripMenuItem18, toolStripMenuItem19, showExpOpt });
             optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             optionsToolStripMenuItem.Text = "Options";
@@ -404,16 +398,6 @@ namespace AssetStudio.GUI
             specifyGame.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             specifyGame.Name = "specifyGame";
             specifyGame.Size = new System.Drawing.Size(121, 23);
-            //
-            // AutoDetectMultipleBundle
-            //
-            AutoDetectMultipleBundle.CheckOnClick = true;
-            AutoDetectMultipleBundle.Name = "AutoDetectMultipleBundle";
-            AutoDetectMultipleBundle.Size = new System.Drawing.Size(225, 23);
-            AutoDetectMultipleBundle.Text = "Auto-detect multiple bundle";
-            AutoDetectMultipleBundle.ToolTipText = "Enable it when there is multiple bundle in the same file.";
-            AutoDetectMultipleBundle.CheckedChanged += autoDetectMultipleBundle_CheckedChanged;
-            
             // 
             // toolStripMenuItem19
             // 
@@ -691,7 +675,7 @@ namespace AssetStudio.GUI
             // 
             // debugMenuItem
             // 
-            debugMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem15, exportClassStructuresMenuItem, enableConsole, clearConsoleToolStripMenuItem, enableFileLogging, loggedEventsMenuItem, openLogFileToolStripMenuItem});
+            debugMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem15, exportClassStructuresMenuItem, enableConsole, clearConsoleToolStripMenuItem, enableFileLogging, loggedEventsMenuItem });
             debugMenuItem.Name = "debugMenuItem";
             debugMenuItem.Size = new System.Drawing.Size(54, 20);
             debugMenuItem.Text = "Debug";
@@ -739,13 +723,6 @@ namespace AssetStudio.GUI
             enableFileLogging.Size = new System.Drawing.Size(191, 22);
             enableFileLogging.Text = "Enable file logging";
             enableFileLogging.CheckedChanged += enableFileLogging_CheckedChanged;
-            // 
-            // openLogFileToolStripMenuItem
-            // 
-            openLogFileToolStripMenuItem.Name = "openLogFileToolStripMenuItem";
-            openLogFileToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
-            openLogFileToolStripMenuItem.Text = "Open Log File";
-            openLogFileToolStripMenuItem.Click += openLogFile;
             // 
             // loggedEventsMenuItem
             // 
@@ -1085,7 +1062,6 @@ namespace AssetStudio.GUI
             previewPanel.Controls.Add(glControl);
             previewPanel.Controls.Add(textPreviewBox);
             previewPanel.Controls.Add(classTextBox);
-            previewPanel.Controls.Add(imgPreviewBox);
             previewPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             previewPanel.Location = new System.Drawing.Point(0, 0);
             previewPanel.Name = "previewPanel";
@@ -1275,19 +1251,6 @@ namespace AssetStudio.GUI
             textPreviewBox.TabIndex = 2;
             textPreviewBox.Visible = false;
             textPreviewBox.WordWrap = false;
-            //
-            // imgPreviewBox
-            //
-            imgPreviewBox.Location = new System.Drawing.Point(0, 0);
-            imgPreviewBox.Name = "imgPreviewBox";
-            imgPreviewBox.Size = new System.Drawing.Size(768, 605);
-            imgPreviewBox.TabIndex = 2;
-            imgPreviewBox.TabStop = false;
-            imgPreviewBox.Visible = false;
-            imgPreviewBox.MouseDown += imgPreviewBox_MouseDown;
-            imgPreviewBox.MouseMove += imgPreviewBox_MouseMove;
-            imgPreviewBox.MouseUp += imgPreviewBox_MouseUp;
-            imgPreviewBox.MouseWheel += imgPreviewBox_MouseWheel;
             // 
             // classTextBox
             // 
@@ -1399,30 +1362,6 @@ namespace AssetStudio.GUI
             showOriginalFileToolStripMenuItem.Visible = false;
             showOriginalFileToolStripMenuItem.Click += showOriginalFileToolStripMenuItem_Click;
             // 
-            // luaToolStripMenuItem
-            // 
-            luaToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { enableLuaScripts, luaTemplates });
-            luaToolStripMenuItem.Name = "luaToolStripMenuItem";
-            luaToolStripMenuItem.Size = new System.Drawing.Size(48, 24);
-            luaToolStripMenuItem.Text = "Lua";
-            // 
-            // enableLuaScripts
-            // 
-            enableLuaScripts.CheckOnClick = true;
-            enableLuaScripts.Name = "enableLuaScripts";
-            enableLuaScripts.Size = new System.Drawing.Size(250, 26);
-            enableLuaScripts.ToolTipText = "Enable processing files with Lua Scripts";
-            enableLuaScripts.Text = "Enable Lua Scripts";
-            enableLuaScripts.CheckedChanged += enableLua_CheckedChanged;
-            // 
-            // luaTemplates
-            // 
-            luaTemplates.Name = "loadLuaTemplate";
-            luaTemplates.Size = new System.Drawing.Size(250, 26);
-            luaTemplates.ToolTipText = "Load Lua Template";
-            luaTemplates.Text = "Load Lua Template";
-            luaTemplates.Click += loadLuaTemplate_Click;
-            // 
             // MainForm
             // 
             AllowDrop = true;
@@ -1498,7 +1437,6 @@ namespace AssetStudio.GUI
         private System.Windows.Forms.ToolStripMenuItem modelToolStripMenuItem;
         private System.Windows.Forms.Label assetInfoLabel;
         private System.Windows.Forms.TextBox textPreviewBox;
-        private System.Windows.Forms.PictureBox imgPreviewBox;
         private System.Windows.Forms.RichTextBox fontPreviewBox;
         private System.Windows.Forms.Panel FMODpanel;
         private System.Windows.Forms.TrackBar FMODvolumeBar;
@@ -1572,7 +1510,6 @@ namespace AssetStudio.GUI
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem18;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem19;
         private System.Windows.Forms.ToolStripComboBox specifyGame;
-        private System.Windows.Forms.ToolStripMenuItem AutoDetectMultipleBundle;
         private System.Windows.Forms.ToolStripComboBox specifyAIVersion;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem16;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem17;
@@ -1616,10 +1553,6 @@ namespace AssetStudio.GUI
         private System.Windows.Forms.ToolStripMenuItem assetMapTypeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadCABMapToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem allowDuplicates;
-        private System.Windows.Forms.ToolStripMenuItem luaToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem enableLuaScripts;
-        private System.Windows.Forms.ToolStripMenuItem luaTemplates;
-        private System.Windows.Forms.ToolStripMenuItem openLogFileToolStripMenuItem;
     }
 }
 

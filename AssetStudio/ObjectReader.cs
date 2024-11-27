@@ -17,10 +17,6 @@ namespace AssetStudio
 
         public int[] version => assetsFile.version;
         public BuildType buildType => assetsFile.buildType;
-        
-        public string unityVersion = "2.5.0f5";
-
-        public bool IsTuanJie = false;
 
         public ObjectReader(EndianBinaryReader reader, SerializedFile assetsFile, ObjectInfo objectInfo, Game game) : base(reader.BaseStream, reader.Endian)
         {
@@ -40,11 +36,10 @@ namespace AssetStudio
             serializedType = objectInfo.serializedType;
             platform = assetsFile.m_TargetPlatform;
             m_Version = assetsFile.header.m_Version;
-            unityVersion = assetsFile.unityVersion;
 
-            IsTuanJie = unityVersion.Contains("t");
-
-            Logger.Verbose($"Initialized reader for {type} object with {m_PathID} in file {assetsFile.fileName} !!");
+            if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Initialized reader for {type} object with {m_PathID} in file {assetsFile.fileName} !!");
+			}
         }
 
         public override int Read(byte[] buffer, int index, int count)
@@ -59,7 +54,9 @@ namespace AssetStudio
 
         public void Reset()
         {
-            Logger.Verbose($"Resetting reader position to object offset 0x{byteStart:X8}...");
+            if(Logger.Flags.HasFlag(LoggerEvent.Verbose)){
+			Logger.Verbose($"Resetting reader position to object offset 0x{byteStart:X8}...");
+			}
             Position = byteStart;
         }
 

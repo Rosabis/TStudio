@@ -12,7 +12,6 @@ namespace AssetStudio
         {
             int index = 0;
             Games.Add(index++, new(GameType.Normal));
-            Games.Add(index++, new Game(GameType.FakeHeader));
             Games.Add(index++, new(GameType.UnityCN));
             Games.Add(index++, new Mhy(GameType.GI, GIMhyShiftRow, GIMhyKey, GIMhyMul, GIExpansionKey, GISBox, GIInitVector, GIInitSeed));
             Games.Add(index++, new Mr0k(GameType.GI_Pack, PackExpansionKey, blockKey: PackBlockKey));
@@ -30,6 +29,7 @@ namespace AssetStudio
             Games.Add(index++, new Game(GameType.Naraka));
             Games.Add(index++, new Game(GameType.EnsembleStars));
             Games.Add(index++, new Game(GameType.OPFP));
+            Games.Add(index++, new Game(GameType.FakeHeader));
             Games.Add(index++, new Game(GameType.FantasyOfWind));
             Games.Add(index++, new Game(GameType.ShiningNikki));
             Games.Add(index++, new Game(GameType.HelixWaltz2));
@@ -50,8 +50,6 @@ namespace AssetStudio
             Games.Add(index++, new Game(GameType.SchoolGirlStrikers));
             Games.Add(index++, new Game(GameType.ExAstris));
             Games.Add(index++, new Game(GameType.PerpetualNovelty));
-            Games.Add(index++, new Game(GameType.GuiLongChao));
-            Games.Add(index++, new Game(GameType.CounterSide));
         }
         public static Game GetGame(GameType gameType) => GetGame((int)gameType);
         public static Game GetGame(int index)
@@ -135,7 +133,6 @@ namespace AssetStudio
     public enum GameType
     {
         Normal,
-        FakeHeader,
         UnityCN,
         GI,
         GI_Pack,
@@ -153,6 +150,7 @@ namespace AssetStudio
         Naraka,
         EnsembleStars,
         OPFP,
+        FakeHeader,
         FantasyOfWind,
         ShiningNikki,
         HelixWaltz2,
@@ -173,14 +171,12 @@ namespace AssetStudio
         SchoolGirlStrikers,
         ExAstris,
         PerpetualNovelty,
-        GuiLongChao,
-        CounterSide,
     }
 
     public static class GameTypes
     {
         public static bool IsNormal(this GameType type) => type == GameType.Normal;
-        public static bool IsUnityCN(this GameType type) => type == GameType.UnityCN || type == GameType.GuiLongChao;
+        public static bool IsUnityCN(this GameType type) => type == GameType.UnityCN;
         public static bool IsGI(this GameType type) => type == GameType.GI;
         public static bool IsGIPack(this GameType type) => type == GameType.GI_Pack;
         public static bool IsGICB1(this GameType type) => type == GameType.GI_CB1;
@@ -201,8 +197,7 @@ namespace AssetStudio
         public static bool IsLoveAndDeepspace(this GameType type) => type == GameType.LoveAndDeepspace;
         public static bool IsExAstris(this GameType type) => type == GameType.ExAstris;
         public static bool IsPerpetualNovelty(this GameType type) => type == GameType.PerpetualNovelty;
-        public static bool IsGuiLongChao(this GameType type) => type == GameType.GuiLongChao;
-        public static bool IsCounterSide(this GameType type) => type == GameType.CounterSide;
+        public static bool IsShiningNikki(this GameType type) => type == GameType.ShiningNikki;
         public static bool IsGIGroup(this GameType type) => type switch
         {
             GameType.GI or GameType.GI_Pack or GameType.GI_CB1 or GameType.GI_CB2 or GameType.GI_CB3 or GameType.GI_CB3Pre => true,
@@ -229,7 +224,7 @@ namespace AssetStudio
 
         public static bool IsBlockFile(this GameType type) => type switch
         {
-            GameType.BH3 or GameType.BH3Pre or GameType.SR or GameType.GI_Pack or GameType.TOT or GameType.ArknightsEndfield or GameType.GuiLongChao => true,
+            GameType.BH3 or GameType.BH3Pre or GameType.SR or GameType.GI_Pack or GameType.TOT or GameType.ArknightsEndfield => true,
             _ => false,
         };
 

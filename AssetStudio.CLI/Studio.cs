@@ -25,7 +25,6 @@ namespace AssetStudio.CLI
     internal static class Studio
     {
         public static Game Game;
-        public static bool AutoDetectMultipleBundle;
         public static bool SkipContainer = false;
         public static AssetsManager assetsManager = new AssetsManager() { ResolveDependencies = false };
         public static AssemblyLoader assemblyLoader = new AssemblyLoader();
@@ -60,7 +59,7 @@ namespace AssetStudio.CLI
         {
             int extractedCount = 0;
             var reader = new FileReader(fileName);
-            reader = reader.PreProcessing(Game, AutoDetectMultipleBundle);
+            reader = reader.PreProcessing(Game);
             if (reader.FileType == FileType.BundleFile)
                 extractedCount += ExtractBundleFile(reader, savePath);
             else if (reader.FileType == FileType.WebFile)
